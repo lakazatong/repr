@@ -8,7 +8,7 @@ class Repr:
 		self.repr_hidden = False  # attributes starting with _
 		self.repr_own_attrs = False  # attributes that are in own_attrs
 		self.repr_by_default = False  # attributes that are neither in white or black list
-		self.repr_falsy = False  # include values like empty lists, False booleans and None
+		self.repr_falsy = False  # include values like empty lists, False booleans and None (numbers 0 are not considered falsy)
 		self.repr_escape_newlines = True
 
 	def __repr__(self):
@@ -20,7 +20,7 @@ class Repr:
 					or (not self.repr_hidden and k.startswith('_')) \
 					or k in self.repr_blacklist \
 					or (k not in self.repr_whitelist and not self.repr_by_default) \
-					or (not v and not self.repr_falsy):
+					or (not v and not self.repr_falsy and not isinstance(v, int) and not isinstance(v, float) and not isinstance(v, complex)):
 				continue
 			pair = f"{k}={v}" if self.repr_keys else str(v)
 			if self.repr_escape_newlines: pair = pair.replace('\n', '\\n')
