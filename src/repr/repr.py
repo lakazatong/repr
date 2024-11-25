@@ -14,17 +14,25 @@ class Repr:
 	def __repr__(self):
 		pairs = []
 		for k, v in vars(self).items():
+			key_alias = k
 			repr_method_name = f'repr_{k}'
-			if hasattr(self, repr_method_name): k, v = getattr(self, repr_method_name)()
+			if hasattr(self, repr_method_name): key_alias, v = getattr(self, repr_method_name)()
+			def run():
+				pair = f"{key_alias}={v}" if self.repr_keys else str(v)
+				if self.repr_escape_newlines: pair = pair.replace('\n', '\\n')
+				pairs.append(pair)
+			# blacklist and falsy values are checked first
+			# even if it's whitelisted, if it's falsy, it's just a hindrance showing
+			if k in self.repr_blacklist \
+				or (not v and not self.repr_falsy and not isinstance(v, int) and not isinstance(v, float) and not isinstance(v, complex)): continue
+			if k in self.repr_whitelist:
+				run()
+				continue
 			if (not self.repr_own_attrs and k in Repr.own_attrs) \
 					or (not self.repr_hidden and k.startswith('_')) \
-					or k in self.repr_blacklist \
-					or (k not in self.repr_whitelist and not self.repr_by_default) \
-					or (not v and not self.repr_falsy and not isinstance(v, int) and not isinstance(v, float) and not isinstance(v, complex)):
+					or (not self.repr_by_default):
 				continue
-			pair = f"{k}={v}" if self.repr_keys else str(v)
-			if self.repr_escape_newlines: pair = pair.replace('\n', '\\n')
-			pairs.append(pair)
+			run()
 
 		classname = self.__class__.__name__
 		repr_class_name = 'repr_self'
